@@ -1,17 +1,26 @@
 <script lang="ts">
+	import './utility.css';
 	import { createEventDispatcher } from 'svelte';
+	import type { CalendarConfig } from './calendar.config';
 
-	// import type { CalendarConfig } from './calendar.config';
-
-	let { businessDay, ...props } = $props();
-	// export let businessDay: boolean;
-	// and the ...props
+	let { businessDay, ...props }: CalendarConfig = $props();
 
 	let day = $state(1);
 
 	let month = $state(new Date().getMonth() + 1);
+	const monthLabel = $derived(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1])
 	let year = $state(new Date().getFullYear());
 	let open = $state(false);
+
+	let weekLabels = [
+		'Sunday',
+		'Monday',
+		'Tuesday',
+		'Wednesday',
+		'Thursday',
+		'Friday',
+		'Saturday',
+	];
 
 	// get the first day of the month, and give us which day of the week it is
 	const dayOfTheWeek = $derived(new Date(year, month - 1, 1).getDay());
@@ -25,13 +34,31 @@
 
 	function toggle() {
 		open = !open;
-		console.log(dayOfTheWeek);
-		console.log(daysInMonth);
 	}
 
 	const dispatch = createEventDispatcher();
 	function select(day: number) {
+		const dayOfWeekSelected = new Date(year, month - 1, day).getDay();
+		console.log(dayOfWeekSelected);
+		// if saturday / sunday, don't dispatch
+		if (businessDay && (dayOfWeekSelected === 0 || dayOfWeekSelected === 6)) {
+			// early return exits the function
+			console.log('dont dispatch');
+			return;
+		}
+		console.log('dispatch');
+		// if early return, does not dispatch
 		dispatch('select', { day, month, year });
+	}
+
+	/**
+	 * return the day of the week label from the day passed in
+	 * @param day
+	 */
+	function getDayOfWeek(day: number) {
+		const dayOfWeekSelected = new Date(year, month - 1, day).getDay();
+		return weekLabels[dayOfWeekSelected];
+		// return the weekLabel
 	}
 </script>
 
@@ -43,14 +70,28 @@
 	<!-- button that goes to the previous month -->
 	<!-- this next line should show the selected day, not just 1 for day -->
 	<!-- introduce a new variable to track which day is selected -->
-	{year}-{month}-{day}
+	<div class="centered">{monthLabel} {day}, {year}</div>
 	<!-- button that goes to the next month -->
 	<div class="grid">
+		{#each weekLabels as label}
+			<div class="centered" aria-hidden="true">
+				<!-- 'monday', slice turns it into ['m', 'o', 'n' ... ] -->
+				{label.slice(0, 3)}
+			</div>
+
+			<div class="sr-only">
+				{label}
+			</div>
+		{/each}
 		{#each days as d}
 			{@const currentMonth = d > 0}
 			<div class:day={currentMonth}>
 				{#if currentMonth}
-					<button class="calendar-day" on:click={() => select(d)}>{d}</button>
+					<button class="calendar-day" on:click={() => select(d)}>
+						<!-- apply some hidden text for the blind / hard of sight users -->
+						<div class="sr-only">{getDayOfWeek(d)}, {monthLabel}</div>
+						{d}
+					</button>
 				{/if}
 			</div>
 		{/each}

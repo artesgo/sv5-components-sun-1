@@ -57,7 +57,7 @@
 	<label>
 		<input type="text" bind:value={description} />
 	</label>
-	<Calendar businessDay={false} {onclick} on:select={console.log}></Calendar>
+	<Calendar businessDay={true} on:select={console.log}></Calendar>
 	<button on:click={addTodo}>Add</button>
 </div>
 
