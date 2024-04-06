@@ -1,11 +1,14 @@
 <script lang="ts">
+	import type { CalendarDate } from './calendar.config';
 	import Calendar from './calendar.svelte';
 
 	interface TODO {
 		description: string;
 		done: boolean;
 		id: number;
+		date?: CalendarDate;
 	}
+
 	const todos = $state<TODO[]>([
 		{
 			description: 'hello',
@@ -38,18 +41,26 @@
 
 	let id = $state(1);
 	let description = $state('');
+	let date = $state<CalendarDate>({
+		day: 0, month: 0, year: 0, monthLabel: '',
+	});
 
 	function addTodo() {
 		id++;
 		todos.push({
 			description,
 			done: false,
-			id
+			id,
+			date,
 		});
 	}
 
 	function onclick() {
 		console.log('hi from calendar output');
+	}
+
+	function selectDate(selected: CalendarDate) {
+		date = selected;
 	}
 </script>
 
@@ -57,7 +68,9 @@
 	<label>
 		<input type="text" bind:value={description} />
 	</label>
-	<Calendar businessDay={true} on:select={console.log}></Calendar>
+	<Calendar businessDay={true} on:select={(event) => {
+		selectDate(event.detail)
+	}}></Calendar>
 	<button on:click={addTodo}>Add</button>
 </div>
 
@@ -67,6 +80,10 @@
 		<div class="todo">
 			<input type="checkbox" checked={item.done} />
 			{item.description}
+
+			{#if item.date}
+				{item.date.monthLabel} {item.date.day}, {item.date.year}
+			{/if}
 		</div>
 	{/each}
 

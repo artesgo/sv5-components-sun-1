@@ -8,19 +8,13 @@
 	let day = $state(1);
 
 	let month = $state(new Date().getMonth() + 1);
-	const monthLabel = $derived(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1])
+	const monthLabel = $derived(
+		['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1]
+	);
 	let year = $state(new Date().getFullYear());
 	let open = $state(false);
 
-	let weekLabels = [
-		'Sunday',
-		'Monday',
-		'Tuesday',
-		'Wednesday',
-		'Thursday',
-		'Friday',
-		'Saturday',
-	];
+	let weekLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 	// get the first day of the month, and give us which day of the week it is
 	const dayOfTheWeek = $derived(new Date(year, month - 1, 1).getDay());
@@ -37,28 +31,27 @@
 	}
 
 	const dispatch = createEventDispatcher();
-	function select(day: number) {
+
+	function select(d: number) {
+		// update the state variable so that it can be used in other places
+		day = d;
+
 		const dayOfWeekSelected = new Date(year, month - 1, day).getDay();
-		console.log(dayOfWeekSelected);
 		// if saturday / sunday, don't dispatch
 		if (businessDay && (dayOfWeekSelected === 0 || dayOfWeekSelected === 6)) {
-			// early return exits the function
-			console.log('dont dispatch');
 			return;
 		}
-		console.log('dispatch');
-		// if early return, does not dispatch
-		dispatch('select', { day, month, year });
+		// if not businessDay config, do dispatch
+		dispatch('select', { day, month, year, monthLabel });
 	}
 
 	/**
 	 * return the day of the week label from the day passed in
 	 * @param day
 	 */
-	function getDayOfWeek(day: number) {
-		const dayOfWeekSelected = new Date(year, month - 1, day).getDay();
+	function getDayOfWeek(d: number) {
+		const dayOfWeekSelected = new Date(year, month - 1, d).getDay();
 		return weekLabels[dayOfWeekSelected];
-		// return the weekLabel
 	}
 </script>
 
@@ -87,7 +80,9 @@
 			{@const currentMonth = d > 0}
 			<div class:day={currentMonth}>
 				{#if currentMonth}
-					<button class="calendar-day" on:click={() => select(d)}>
+					<!-- TODO: forbid clicking of saturday / sunday if businessDay is true -->
+					<!-- it should not be a button for sat/sun -->
+					<button class="calendar-day" class:selected={day === d} on:click={() => select(d)}>
 						<!-- apply some hidden text for the blind / hard of sight users -->
 						<div class="sr-only">{getDayOfWeek(d)}, {monthLabel}</div>
 						{d}
@@ -121,5 +116,23 @@
 		border: none;
 		width: 100%;
 		height: 100%;
+		font-size: 10px;
+		transition: 0.5s;
+	}
+
+	/* .calendar-day.selected, */
+	.calendar-day.selected:focus,
+	.calendar-day.selected {
+		background: #0cf;
+	}
+
+	.calendar-day:focus {
+		background: #fc0;
+		font-size: 16px;
+	}
+
+	.calendar-day:hover {
+		background: #f0c;
+		font-size: 16px;
 	}
 </style>
