@@ -50,8 +50,12 @@
 	 * @param day
 	 */
 	function getDayOfWeek(d: number) {
-		const dayOfWeekSelected = new Date(year, month - 1, d).getDay();
-		return weekLabels[dayOfWeekSelected];
+		return new Date(year, month - 1, d).getDay();
+	}
+
+	function getDayOfWeekLabel(d: number) {
+		const dayOfWeek = getDayOfWeek(d);
+		return weekLabels[dayOfWeek];
 	}
 </script>
 
@@ -80,13 +84,21 @@
 			{@const currentMonth = d > 0}
 			<div class:day={currentMonth}>
 				{#if currentMonth}
+					{@const isWeekend = getDayOfWeek(d) === 0 || getDayOfWeek(d) === 6}
 					<!-- TODO: forbid clicking of saturday / sunday if businessDay is true -->
 					<!-- it should not be a button for sat/sun -->
-					<button class="calendar-day" class:selected={day === d} on:click={() => select(d)}>
-						<!-- apply some hidden text for the blind / hard of sight users -->
-						<div class="sr-only">{getDayOfWeek(d)}, {monthLabel}</div>
-						{d}
-					</button>
+					{#if isWeekend && businessDay}
+						<div class="calendar-weekend">
+							<div class="sr-only">{getDayOfWeekLabel(d)}, {monthLabel}</div>
+							{d}
+						</div>
+					{:else}
+						<button class="calendar-day" class:selected={day === d} on:click={() => select(d)}>
+							<!-- apply some hidden text for the blind / hard of sight users -->
+							<div class="sr-only">{getDayOfWeekLabel(d)}, {monthLabel}</div>
+							{d}
+						</button>
+					{/if}
 				{/if}
 			</div>
 		{/each}
@@ -111,21 +123,31 @@
 		box-shadow: 4px 4px 4px black;
 	}
 
+	.calendar-weekend,
 	.calendar-day {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 		background: none;
 		border: none;
 		width: 100%;
 		height: 100%;
 		font-size: 10px;
 		transition: 0.5s;
+		cursor: pointer;
 	}
 
-	/* .calendar-day.selected, */
+	.calendar-weekend {
+		background: #ddd;
+		cursor: auto;
+	}
+
 	.calendar-day.selected:focus,
 	.calendar-day.selected {
 		background: #0cf;
 	}
 
+	.calendar-day.selected,
 	.calendar-day:focus {
 		background: #fc0;
 		font-size: 16px;
